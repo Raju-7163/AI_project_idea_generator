@@ -33,7 +33,10 @@ export default function Onboarding() {
     
     try {
       const token = await getToken();
-      
+
+      if (!token) {
+        throw new Error('Not authenticated. Please log in again.');
+      }
       const payload = {
         userId: user?.uid,
         programmingLanguages: formState.programmingLanguages.split(',').map(s => s.trim()).filter(Boolean),
@@ -62,8 +65,14 @@ export default function Onboarding() {
       });
 
       if (!res.ok) {
-        const errorData = await res.json();
-        throw new Error(errorData?.error?.message || 'Failed to save profile');
+        let errorMessage = `Request failed with status ${res.status}`;
+        try {
+          const errorData = await res.json();
+          errorMessage = errorData?.error?.message || errorMessage;
+        } catch {
+          // Response body was empty or not JSON
+        }
+        throw new Error(errorMessage);
       }
 
       router.push('/dashboard');
