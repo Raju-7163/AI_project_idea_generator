@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProjectRepository } from '../../../../services/database/project.repository';
 import { handleApiError } from '../../../../lib/api/handler';
 import { verifyAuthToken } from '../../../../lib/auth/server-auth';
-
-const projectRepo = new ProjectRepository();
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { ProjectRepository } = await import('../../../../services/database/project.repository');
+    const projectRepo = new ProjectRepository();
     const userId = await verifyAuthToken(request);
     const { id } = await params;
     const project = await projectRepo.getProjectById(id, userId);

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { ProfileRepository } from '../../../services/database/profile.repository';
 import { handleApiError } from '../../../lib/api/handler';
 import { verifyAuthToken } from '../../../lib/auth/server-auth';
 
-const profileRepo = new ProfileRepository();
-
 export async function GET(request: NextRequest) {
   try {
+    const { ProfileRepository } = await import('../../../services/database/profile.repository');
+    const profileRepo = new ProfileRepository();
     const currentUserId = await verifyAuthToken(request);
     const profile = await profileRepo.getProfile(currentUserId);
     return NextResponse.json(profile, { status: 200 });
@@ -17,6 +16,9 @@ export async function GET(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
+    const { ProfileRepository } = await import('../../../services/database/profile.repository');
+    const profileRepo = new ProfileRepository();
+
     const currentUserId = await verifyAuthToken(request);
 
     let body: unknown;
