@@ -68,7 +68,7 @@ export default function Onboarding() {
         let errorMessage = `Request failed with status ${res.status}`;
         try {
           const errorData = await res.json();
-          errorMessage = errorData?.error?.message || errorMessage;
+          errorMessage = errorData?.error?.debug || errorData?.error?.message || errorMessage;
         } catch {
           // Response body was empty or not JSON
         }

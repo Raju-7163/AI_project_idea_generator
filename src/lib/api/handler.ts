@@ -23,11 +23,15 @@ export function handleApiError(error: unknown) {
   }
 
   // Generic fallback for unhandled exceptions (Do NOT expose stack traces)
-  console.error('Unhandled API Error:', error);
+  console.error('Unhandled API Error:', error instanceof Error ? { message: error.message, name: error.name, stack: error.stack } : error);
   return NextResponse.json({
     error: {
       code: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred.'
+      message: process.env.NODE_ENV !== 'production'
+        ? (error instanceof Error ? error.message : String(error))
+        : 'An unexpected error occurred.',
+      // Temporary debug field — remove after diagnosis
+      debug: error instanceof Error ? error.message : String(error),
     }
   }, { status: 500 });
 }
