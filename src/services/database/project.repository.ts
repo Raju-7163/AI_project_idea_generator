@@ -27,9 +27,9 @@ export class ProjectRepository {
       }
       
       project = doc.data() as ProjectIdea;
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Fallback to mock for Phase 2 testing
-      if (e.message.includes('credentials missing')) {
+      if (e instanceof Error && e.message.includes('credentials missing')) {
         project = MOCK_DB[projectId];
         if (!project) {
           throw new NotFoundError('Project');
@@ -62,9 +62,9 @@ export class ProjectRepository {
     try {
       const db = getFirestore();
       await db.collection(this.collectionName).doc(parsedData.id).set(parsedData);
-    } catch (e: any) {
+    } catch (e: unknown) {
        // Fallback to mock for Phase 2 testing
-       if (e.message.includes('credentials missing')) {
+       if (e instanceof Error && e.message.includes('credentials missing')) {
          MOCK_DB[parsedData.id] = parsedData;
        } else {
          throw e;
@@ -72,5 +72,50 @@ export class ProjectRepository {
     }
 
     return parsedData;
+  }
+
+  /**
+   * Retrieves paginated projects belonging to the user.
+   */
+  async getProjectsByUser(currentUserId: string, pagination: import('../../lib/pagination').PaginationParams): Promise<import('../../lib/pagination').PaginatedResult<ProjectIdea>> {
+    if (!currentUserId) throw new ValidationError('User ID is required.');
+
+    try {
+      const db = getFirestore();
+      let query = db.collection(this.collectionName)
+        .where('userId', '==', currentUserId)
+        .orderBy('createdAt', 'desc')
+        .limit(pagination.limit);
+
+      if (pagination.cursor) {
+        const cursorDoc = await db.collection(this.collectionName).doc(pagination.cursor).get();
+        if (cursorDoc.exists) {
+          query = query.startAfter(cursorDoc);
+        }
+      }
+
+      const snapshot = await query.get();
+      const projects = snapshot.docs.map(doc => doc.data() as ProjectIdea);
+
+      return {
+        data: projects,
+        nextCursor: snapshot.docs.length === pagination.limit ? snapshot.docs[snapshot.docs.length - 1].id : undefined,
+      };
+    } catch (e: unknown) {
+      if (e instanceof Error && e.message.includes('credentials missing')) {
+        const allProjects = Object.values(MOCK_DB).filter(p => p.userId === currentUserId);
+        
+        let startIndex = 0;
+        if (pagination.cursor) {
+          const idx = allProjects.findIndex(p => p.id === pagination.cursor);
+          if (idx !== -1) startIndex = idx + 1;
+        }
+        const data = allProjects.slice(startIndex, startIndex + pagination.limit);
+        const nextCursor = data.length === pagination.limit ? data[data.length - 1].id : undefined;
+
+        return { data, nextCursor };
+      }
+      throw e;
+    }
   }
 }

@@ -17,13 +17,17 @@ export const metadata: Metadata = {
   description: "An AI-powered platform to help final-year students generate, plan, and build practical software projects based on their skills and interests.",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+import { AuthProvider } from "@/lib/firebase/AuthContext";
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <AuthProvider>{children}</AuthProvider>
+      </body>
     </html>
   );
 }

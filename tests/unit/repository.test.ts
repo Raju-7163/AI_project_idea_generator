@@ -1,5 +1,5 @@
 import { ProjectRepository } from '../../src/services/database/project.repository';
-import { ForbiddenError, NotFoundError, ValidationError } from '../../src/lib/api-errors';
+import { ForbiddenError, NotFoundError } from '../../src/lib/api-errors';
 import { ZodError } from 'zod';
 
 describe('ProjectRepository (Security & Validation)', () => {
